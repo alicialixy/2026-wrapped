@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>My 2026 Wrapped</title>
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    
+    <style>
+        /* --- 全局样式 --- */
+        :root {
+            --primary: #1DB954; /* Spotify Green */
+            --bg-dark: #121212;
+            --text-light: #ffffff;
+            --accent: #FFD700;
+        }
+        
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: var(--bg-dark); color: var(--text-light); }
+        
+        #app { height: 100%; width: 100%; }
+        
+        /* Swiper 容器 */
+        .swiper { width: 100%; height: 100%; }
+        
+        /* 每一屏的通用样式 */
+        .swiper-slide {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: center; /* 垂直居中 */
+            align-items: center;     /* 水平居中 */
+            text-align: center;
+            overflow: hidden;
+            background-size: cover;
+            background-position: center;
+        }
+
+        /* 背景装饰 (伪元素实现动态背景) */
+        .bg-layer {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1;
+            opacity: 0.6;
+        }
+
+        /* --- 具体页面样式 --- */
+        
+        /* 封面页 */
+        .slide-cover { background: linear-gradient(135deg, #2c3e50, #000000); }
+        .title-huge { font-size: 3.5rem; font-weight: 800; line-height: 1; margin-bottom: 20px; background: linear-gradient(to right, #fff, #999); -webkit-background-clip: text; color: transparent; }
+        .btn-start { margin-top: 40px; padding: 12px 30px; border: 1px solid white; border-radius: 30px; background: transparent; color: white; font-size: 1.2rem; cursor: pointer; animation: pulse 2s infinite; }
+
+        /* 数据页通用 */
+        .slide-data { background: linear-gradient(to bottom, #141e30, #243b55); }
+        .label { font-size: 1rem; color: #aaa; margin-bottom: 10px; letter-spacing: 2px; text-transform: uppercase; }
+        .highlight { font-size: 2.5rem; font-weight: bold; color: var(--primary); margin: 10px 0; }
+        .sub-text { font-size: 1rem; color: #ddd; max-width: 80%; line-height: 1.5; }
+
+        /* 图表容器 */
+        #radarChart { width: 90vw; height: 40vh; margin-top: 20px; }
+
+        /* 总结页 */
+        .slide-summary { background: linear-gradient(45deg, #4b6cb7, #182848); }
+        .summary-card {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            width: 85%;
+            border: 1px solid rgba(255,255,255,0.2);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .avatar { width: 80px; height: 80px; border-radius: 50%; background: #ccc; margin: 0 auto 20px; display: block; object-fit: cover;}
+        .keyword { font-size: 3rem; color: var(--accent); font-weight: 900; margin: 20px 0; }
+
+        /* 音乐控制图标 */
+        .music-control {
+            position: fixed; top: 20px; right: 20px; z-index: 100;
+            width: 30px; height: 30px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer;
+        }
+        .music-icon { font-size: 14px; }
+        .music-spin { animation: spin 4s linear infinite; }
+        
+        /* 向上滑动提示箭头 */
+        .arrow-up {
+            position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+            width: 20px; height: 20px; border-left: 2px solid #fff; border-bottom: 2px solid #fff;
+            transform: rotate(-45deg); opacity: 0.5;
+            animation: bounce 2s infinite;
+        }
+
+        /* 动画关键帧 */
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        @keyframes bounce { 0%, 20%, 50%, 80%, 100% {transform: translateX(-50%) rotate(-45deg) translateY(0);} 40% {transform: translateX(-50%) rotate(-45deg) translateY(-10px);} 60% {transform: translateX(-50%) rotate(-45deg) translateY(-5px);} }
+    </style>
+</head>
+<body>
+
+<div id="app">
+    <div class="music-control" :class="{ 'music-spin': isPlaying }" @click="toggleMusic">
+        <span class="music-icon">🎵</span>
+    </div>
+    <audio ref="audioPlayer" loop>
+        <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
+    </audio>
+
+    <div class="swiper mySwiper">
+        <div class="swiper-wrapper">
+
+            <div class="swiper-slide slide-cover">
+                <div class="bg-layer" style="background: radial-gradient(circle, rgba(63,94,251,0.4) 0%, rgba(252,70,107,0) 100%);"></div>
+                <h1 class="title-huge animate__animated" :class="animClass(0, 'animate__fadeInDown')">2026<br>Wrapped</h1>
+                <p class="animate__animated" :class="animClass(0, 'animate__fadeInUp', '1s')">你的年度生活报告</p>
+                <button class="btn-start animate__animated" :class="animClass(0, 'animate__zoomIn', '1.5s')" @click="startExperience">开启旅程</button>
+            </div>
+
+            <div class="swiper-slide slide-data">
+                <div class="label animate__animated" :class="animClass(1, 'animate__fadeInDown')">Digital Life</div>
+                <div class="sub-text animate__animated" :class="animClass(1, 'animate__fadeIn')">这一年，你沉浸在数字世界</div>
+                
+                <div class="highlight animate__animated" :class="animClass(1, 'animate__zoomIn', '0.5s')">
+                    {{ animatedScreenTime }} <span style="font-size:1rem; color:#fff">小时</span>
+                </div>
+                
+                <p class="sub-text animate__animated" :class="animClass(1, 'animate__fadeInUp', '1s')">
+                    相当于看了 <strong>{{ (userData.screenTime / 2).toFixed(0) }}</strong> 部电影<br>
+                    你的年度最爱 APP 是 <strong>{{ userData.topApp }}</strong>
+                </p>
+                <div class="arrow-up"></div>
+            </div>
+
+            <div class="swiper-slide slide-data" style="background: linear-gradient(to top, #09203f 0%, #537895 100%);">
+                <div class="label animate__animated" :class="animClass(2, 'animate__fadeInDown')">Finance & Joy</div>
+                <div class="sub-text">在这笔钱上，你毫不犹豫</div>
+                
+                <div class="highlight animate__animated" :class="animClass(2, 'animate__bounceIn')">
+                    ¥ {{ userData.mostExpensivePrice }}
+                </div>
+                <div class="sub-text animate__animated" :class="animClass(2, 'animate__fadeInUp')">
+                    购买了：{{ userData.mostExpensiveItem }}
+                </div>
+                <br>
+                <div class="sub-text animate__animated" :class="animClass(2, 'animate__fadeInUp', '0.5s')">
+                    但你也喝了 <strong>{{ userData.coffeeCount }}</strong> 杯咖啡<br>
+                    是续命，也是享受
+                </div>
+                <div class="arrow-up"></div>
+            </div>
+
+            <div class="swiper-slide slide-data">
+                <div class="label animate__animated" :class="animClass(3, 'animate__fadeInDown')">Your Dimensions</div>
+                <div id="radarChart" class="animate__animated" :class="animClass(3, 'animate__zoomIn')"></div>
+                <div class="sub-text animate__animated" :class="animClass(3, 'animate__fadeInUp', '1s')">
+                    你在 <strong>{{ userData.strongestDim }}</strong> 方面表现惊人
+                </div>
+                <div class="arrow-up"></div>
+            </div>
+
+            <div class="swiper-slide slide-summary">
+                <div class="summary-card animate__animated" :class="animClass(4, 'animate__flipInY')">
+                    <img src="https://ui-avatars.com/api/?name=Alex&background=random" class="avatar" alt="Avatar">
+                    <p>Alex 的 2026 年度关键词</p>
+                    <div class="keyword">{{ userData.keyword }}</div>
+                    <div style="height: 1px; background: rgba(255,255,255,0.3); margin: 20px 0;"></div>
+                    <p style="font-size: 0.9rem; opacity: 0.8;">
+                        🎵 听歌 {{ userData.musicHours }}h<br>
+                        ✈️ 飞行 {{ userData.flightDistance }}km<br>
+                        📚 阅读 {{ userData.booksRead }} 本
+                    </p>
+                </div>
+                <p style="margin-top:20px; font-size: 0.8rem; opacity: 0.6;">长按截图分享</p>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js"></script>
+
+<script>
+    const { createApp, ref, onMounted, nextTick } = Vue;
+
+    createApp({
+        setup() {
+            // --- 1. 用户数据配置 (在这里修改你的 2026 数据) ---
+            const userData = ref({
+                screenTime: 2140,     // 屏幕使用小时
+                topApp: "Obsidian",   // 最常用APP
+                mostExpensiveItem: "Herman Miller 椅子",
+                mostExpensivePrice: "9,800",
+                coffeeCount: 4
